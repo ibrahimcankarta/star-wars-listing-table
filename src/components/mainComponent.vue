@@ -77,6 +77,13 @@
                       </div>
                       </span>
                     </div>
+                    <div class="flex my-5 font-light rounded-md border-2 border-indigo-500">
+                      <span class="px-4 flex mx-2">Search
+                         <div class="flex my-1 mx-1">
+                            <input class=" mx-2 h-4 text-sm rounded-sm border border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-60 focus:border-transparent" type="text" placeholder="Filter by name"  v-model="searchQuery" />
+                        </div>
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <div>
@@ -92,41 +99,41 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="data in dataSet.results" :key="data.id" class="bg-white lg:hover:bg-gray-100 flex lg:table-row flex-row lg:flex-row flex-wrap lg:flex-no-wrap mb-10 lg:mb-0">
-                            <td v-if="nameChecked" class="w-full lg:w-auto text-gray-800 text-center border-b block lg:table-cell relative lg:static">
-                                <span class="lg:hidden static text-indigo-600 px-2 py-1 text-xs border-b font-bold">name</span><br class="mb-2">
-                                <p class="py-1 px-2 text-sm">{{data.name}}</p>
-                            </td>
-                            <td v-if="heightChecked" class="w-full lg:w-auto text-gray-800 text-center border-b block lg:table-cell relative lg:static">
+                      <tr v-for="item in resultQuery" :key="item.id">
+                        <td  v-if="nameChecked" class="w-full lg:w-auto text-gray-800 text-center border-b block lg:table-cell relative lg:static">
+                          <span class="lg:hidden static text-indigo-600 px-2 py-1 text-xs border-b font-bold">name</span><br class="mb-2">
+                          <p class="py-1 px-2 text-sm">{{item.name}}</p>
+                        </td>
+                        <td v-if="heightChecked" class="w-full lg:w-auto text-gray-800 text-center border-b block lg:table-cell relative lg:static">
                                 <span class="lg:hidden static text-indigo-600 px-2 py-1 text-xs border-b font-bold">height</span><br class="mb-2">
-                                <p class="py-1 px-2 text-sm">{{data.height}}</p>
+                                <p class="py-1 px-2 text-sm">{{item.height}}</p>
                             </td>
                             <td v-if="massChecked" class="w-full lg:w-auto text-gray-800 text-center border-b block lg:table-cell relative lg:static">
                                 <span class="lg:hidden static text-indigo-600 px-2 py-1 text-xs border-b font-bold w-24">mass</span><br class="mb-2">
-                                <p class="py-1 px-2 text-sm mx-4 pt-2">{{data.mass}}</p>
+                                <p class="py-1 px-2 text-sm mx-4 pt-2">{{item.mass}}</p>
                             </td>
                             <td v-if="birthYearChecked" class="w-full lg:w-auto text-gray-800 text-center border-b block lg:table-cell relative lg:static">
                                 <span class="lg:hidden static text-indigo-600 px-2 py-1 text-xs border-b font-bold w-24">birth year</span><br class="mb-2">
-                                <span class="py-1 px-2 text-xs text-yellow-500 rounded-full lg:flex xl:flex lg:justify-center xl:justify-center"> {{data.birth_year}} </span>
+                                <span class="py-1 px-2 text-xs text-yellow-500 rounded-full lg:flex xl:flex lg:justify-center xl:justify-center"> {{item.birth_year}} </span>
                             </td>
                             <td v-if="genderChecked" class="w-full lg:w-auto text-gray-800 text-center border-b block lg:table-cell relative lg:static">
-                                <span class="lg:hidden static text-indigo-600 px-2 py-1 text-xs border-b font-bold w-24">gender</span><br class="mb-2">
-                                <span class="py-1 px-2 text-blue-400 hover:text-blue-600 text-xs ">{{data.gender}}</span>
+                                <span class="lg:hidden static text-indigo-600 px-2 py-1 text-xs border-b font-bold w-24" :class="sortedClass('gender')" @click="sortBy('gender')">gender</span><br class="mb-2">
+                                <span class="py-1 px-2 text-blue-400 hover:text-blue-600 text-xs ">{{item.gender}}</span>
                             </td>
                             <td v-if="homeworldChecked" class="w-full lg:w-auto text-gray-800 text-center border-b block lg:table-cell relative lg:static">
                                 <span class="lg:hidden static text-indigo-600 px-2 py-1 text-xs border-b font-bold w-24">homeworld</span><br class="mb-2">
                                 <span v-for="home in homeworld.results" :key="home.id" class="py-1 px-2 text-sm">
-                                    <p v-if="home.url == data.homeworld">
-                                      <span v-if="home !== null">
+                                    <p v-if="home.url == item.homeworld">
+                                      <a href="/" v-if="home !== null">
                                         {{home.name}}
-                                      </span>
-                                      <span v-else>
+                                      </a>
+                                      <a href="/" v-else>
                                         ??
-                                      </span>
+                                      </a>
                                     </p>
                                 </span>
                             </td>
-                        </tr>
+                    </tr>
                     </tbody>
                   </table>
                   <div>
@@ -148,6 +155,7 @@
 
 <script>
 import axios from 'axios'
+
 export default {
   name: 'mainComponent',
   components: {
@@ -156,13 +164,19 @@ export default {
     return {
       type: 'table',
       dataSet: [],
+      sort: {
+        key: '',
+        isAsc: false
+      },
+      searchQuery: null,
       homeworld: [],
       nameChecked : true,
       heightChecked : true,
       massChecked : true,
       birthYearChecked : true,
       genderChecked : true,
-      homeworldChecked : true
+      homeworldChecked : true,
+      resources:[]
     }
   },
   mounted: function() {
@@ -170,6 +184,7 @@ export default {
     axios.get('https://swapi.dev/api/people/')
       .then(response => {
         this.dataSet = response.data;
+        this.resources = this.dataSet.results;
       })
       .catch(error => {
         console.log(error);
@@ -183,12 +198,43 @@ export default {
         console.log(error);
       });
   },
+ computed: {
+   sortedItems () {
+      const list = this.items.slice();
+      if (this.sort.key) {
+        list.sort((a, b) => {
+          a = a[this.sort.key]
+          b = b[this.sort.key]
+
+          return (a === b ? 0 : a > b ? 1 : -1) * (this.sort.isAsc ? 1 : -1)
+        });
+      }
+      
+      return list;
+    },
+    resultQuery(){
+      if(this.searchQuery){
+      return this.resources.filter((item)=>{
+        return this.searchQuery.toLowerCase().split(' ').every(v => item.name.toLowerCase().includes(v))
+      })
+      }else{
+        return this.resources;
+      }
+    }
+  },
   methods: {
+    sortedClass (key) {
+      return this.sort.key === key ? `sorted ${this.sort.isAsc ? 'asc' : 'desc' }` : '';
+    },
+    sortBy (key) {
+      this.sort.isAsc = this.sort.key === key ? !this.sort.isAsc : false;
+      this.sort.key = key;
+    }
+  },
     change (type) {
       this.type = type
     }
   }
-}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
