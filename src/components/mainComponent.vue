@@ -117,7 +117,7 @@
                                 <span class="py-1 px-2 text-xs text-yellow-500 rounded-full lg:flex xl:flex lg:justify-center xl:justify-center"> {{item.birth_year}} </span>
                             </td>
                             <td v-if="genderChecked" class="w-full lg:w-auto text-gray-800 text-center border-b block lg:table-cell relative lg:static">
-                                <span class="lg:hidden static text-indigo-600 px-2 py-1 text-xs border-b font-bold w-24" :class="sortedClass('gender')" @click="sortBy('gender')">gender</span><br class="mb-2">
+                                <span class="lg:hidden static text-indigo-600 px-2 py-1 text-xs border-b font-bold w-24">gender</span><br class="mb-2">
                                 <span class="py-1 px-2 text-blue-400 hover:text-blue-600 text-xs ">{{item.gender}}</span>
                             </td>
                             <td v-if="homeworldChecked" class="w-full lg:w-auto text-gray-800 text-center border-b block lg:table-cell relative lg:static">
@@ -134,6 +134,7 @@
                                 </span>
                             </td>
                     </tr>
+                      
                     </tbody>
                   </table>
                   <div>
@@ -164,10 +165,6 @@ export default {
     return {
       type: 'table',
       dataSet: [],
-      sort: {
-        key: '',
-        isAsc: false
-      },
       searchQuery: null,
       homeworld: [],
       nameChecked : true,
@@ -199,19 +196,6 @@ export default {
       });
   },
  computed: {
-   sortedItems () {
-      const list = this.items.slice();
-      if (this.sort.key) {
-        list.sort((a, b) => {
-          a = a[this.sort.key]
-          b = b[this.sort.key]
-
-          return (a === b ? 0 : a > b ? 1 : -1) * (this.sort.isAsc ? 1 : -1)
-        });
-      }
-      
-      return list;
-    },
     resultQuery(){
       if(this.searchQuery){
       return this.resources.filter((item)=>{
@@ -223,18 +207,11 @@ export default {
     }
   },
   methods: {
-    sortedClass (key) {
-      return this.sort.key === key ? `sorted ${this.sort.isAsc ? 'asc' : 'desc' }` : '';
-    },
-    sortBy (key) {
-      this.sort.isAsc = this.sort.key === key ? !this.sort.isAsc : false;
-      this.sort.key = key;
-    }
-  },
     change (type) {
       this.type = type
     }
   }
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
